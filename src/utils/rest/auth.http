@@ -1,0 +1,41 @@
+@token=eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjA2MjM5ZjE4LTQxZWItNGE1Yi05YzM0LWY0NGZhNWYwZDgwZSIsImlhdCI6MTc1MTQ1ODQxMSwic3ViIjoidG9rZW4ifQ.-f9A05A5BBzEnszC08ybFF9dPzbbH-To7debOzLbpBg
+### 
+# @name Me
+GET {{NEXT_PUBLIC_API_URL}}/auth
+Authorization: Bearer {{token}}
+
+### 
+# @name Init
+POST {{NEXT_PUBLIC_API_URL}}/auth/init
+Content-Type: application/json
+
+{
+  "email": "sX9oCss@example.com"
+}
+
+### 
+# @name Login 
+POST {{NEXT_PUBLIC_API_URL}}/auth
+Content-Type: application/json
+
+{
+  "email": "sX9oCss@example.com",
+  "otp": "545555"
+}
+
+
+### 
+# @name Logout
+POST {{NEXT_PUBLIC_API_URL}}/auth/logout
+Authorization: Bearer {{TOKEN}}
+
+### 
+# @name Register 
+POST {{NEXT_PUBLIC_API_URL}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "sX9oCss@example.com",
+  "name": "Harrison",
+  "phone": "1234532890"
+}

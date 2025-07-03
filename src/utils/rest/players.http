@@ -1,0 +1,12 @@
+@token=eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImQyZWExZGZjLWE2ODMtNDA3My05OWFjLTQ2MTQ0MDUzM2I3MSIsImlhdCI6MTc1MDg3NDg5Mywic3ViIjoidG9rZW4ifQ.LaeIICBkX5JPXKumGFDxFDIkCG4AKXNa2RvPpUeqYuM
+
+### 
+# @name GET playes 
+GET {{NEXT_PUBLIC_API_URL}}/player
+Content-Type: application/json
+
+### 
+# @name GET playes 
+GET {{NEXT_PUBLIC_API_URL}}/player/{playerId}
+Content-Type: application/json
+

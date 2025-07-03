@@ -1,0 +1,14 @@
+@betId=672bfed8-c738-435d-ac20-920e28620022
+@token=eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImQyZWExZGZjLWE2ODMtNDA3My05OWFjLTQ2MTQ0MDUzM2I3MSIsImlhdCI6MTc1MDg3NDg5Mywic3ViIjoidG9rZW4ifQ.LaeIICBkX5JPXKumGFDxFDIkCG4AKXNa2RvPpUeqYuM
+
+###
+# @name Place Bet
+POST {{NEXT_PUBLIC_API_URL}}/bets/{{betId}}/place
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "optionId": "41c1d080-d22d-44bb-bf2c-e07ce5f0f26e",
+  "amount": 100
+}
+

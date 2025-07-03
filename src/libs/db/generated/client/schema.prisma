@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  USER
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  phone      String   @unique
+  name       String
+  role       Role     @default(USER)
+  isInternal Boolean  @default(false)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  otps   Otp[]
+  tokens Token[]
+  Player Player?
+  wallet Wallet?
+}
+
+model Token {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revoked   Boolean   @default(false)
+  revokedAt DateTime?
+  ipAddress String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([revoked])
+}
+
+model Otp {
+  id            String    @id @default(uuid())
+  userId        String
+  otp           String
+  isOtpUsed     Boolean   @default(false)
+  otpCreatedAt  DateTime  @default(now())
+  otpExpiresAt  DateTime
+  otpVerifiedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  // should have only one false use otp
+  @@index([isOtpUsed])
+  @@index([otpExpiresAt])
+}
+
+model Tournament {
+  id         String      @id @default(cuid())
+  name       String
+  fee        Int
+  createdAt  DateTime    @default(now())
+  teamRounds TeamRound[]
+  round      Round[]
+  teamStats  TeamStats[]
+  Fixture    Fixture?
+}
+
+model Fixture {
+  id           String     @id @default(cuid())
+  tournamentId String     @unique
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  teams        Team[]
+  createdAt    DateTime   @default(now())
+}
+
+model Round {
+  id        String   @id @default(cuid())
+  number    Int // round number
+  createdAt DateTime @default(now())
+
+  tournamentId String
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id])
+  teams        TeamRound[]
+  teamStats    TeamStats[]
+}
+
+model TeamRound {
+  id      String @id @default(cuid())
+  teamId  String
+  roundId String
+
+  team  Team  @relation(fields: [teamId], references: [id])
+  round Round @relation(fields: [roundId], references: [id])
+
+  createdAt    DateTime    @default(now())
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  tournamentId String?
+
+  @@unique([teamId, roundId, tournamentId]) // ensure each team-round pair is unique for each tournament and every Round is unique
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  amount    Int
+  createdAt DateTime @default(now())
+  playerId  String?  @unique
+  player    Player?  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Player {
+  id              String            @id @default(cuid())
+  name            String
+  balance         Int
+  category        Category          @default(NOOB)
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  team            Team?             @relation(fields: [teamId], references: [id])
+  teamId          String?
+  playerStats     PlayerStats?
+  wallet          Wallet?
+  playerTeamStats PlayerTeamStats[]
+}
+
+model PlayerStats {
+  id        String   @id @default(cuid())
+  playerId  String   @unique
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  matches   Int
+  wins      Int
+  deaths    Int
+  kills     Int
+  kd        Float
+  createdAt DateTime @default(now())
+}
+
+// Category enum
+enum Category {
+  NOOB
+  PRO
+  ULTRA_NOOB
+  ULTRA_PRO
+}
+
+model Team {
+  id              String            @id @default(cuid())
+  name            String
+  players         Player[]
+  createdAt       DateTime          @default(now())
+  teamNumber      Int
+  teamStats       TeamStats?        @relation(fields: [teamStatsId], references: [id])
+  playerTeamStats PlayerTeamStats[]
+  teamRound       TeamRound[]
+  fixtures        Fixture?          @relation(fields: [fixturesId], references: [id])
+  fixturesId      String?
+  teamStatsId     String?           @unique
+}
+
+model TeamStats {
+  id              String            @id @default(cuid())
+  teamId          String?
+  team            Team?
+  kills           Int
+  deaths          Int
+  kd              Float
+  position        Int
+  total           Int
+  createdAt       DateTime          @default(now())
+  playerTeamStats PlayerTeamStats[]
+  tournament      Tournament?       @relation(fields: [tournamentId], references: [id])
+  tournamentId    String?
+  roundId         String?
+  round           Round?            @relation(fields: [roundId], references: [id])
+
+  @@unique([teamId, tournamentId])
+}
+
+model KDStats {
+  id       String @id @default(cuid())
+  playerId String @unique
+  kd       Float
+}
+
+model PlayerTeamStats {
+  id       String @id @default(cuid())
+  playerId String
+  teamId   String
+
+  kills     Int
+  deaths    Int
+  kd        Float
+  position  Int
+  total     Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  player      Player     @relation(fields: [playerId], references: [id])
+  team        Team       @relation(fields: [teamId], references: [id])
+  teamStats   TeamStats? @relation(fields: [teamStatsId], references: [id])
+  teamStatsId String?
+
+  @@unique([playerId, teamId]) // ensures one record per player per team
+}
