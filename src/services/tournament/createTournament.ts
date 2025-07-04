@@ -10,11 +10,6 @@ export async function createTournament({ name, fee }: Props) {
     data: {
       name: name,
       fee: fee,
-      round: {
-        create: {
-          number: 1,
-        },
-      },
     },
   });
 }

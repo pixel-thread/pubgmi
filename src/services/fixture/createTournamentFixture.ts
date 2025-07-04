@@ -1,10 +1,20 @@
 import { prisma } from "@/libs/db";
-import { Prisma } from "@/libs/db/generated/client";
 
-type Props = { data: Prisma.FixtureCreateInput };
+type Team = {
+  id: string;
+};
+type Props = { tournament: { id: string }; createdTeams: Team[] };
 
-export async function createTournamentFixture({ data }: Props) {
+export async function createTournamentFixture({
+  tournament,
+  createdTeams,
+}: Props) {
   return await prisma.fixture.create({
-    data: data,
+    data: {
+      tournament: {
+        connect: { id: tournament.id },
+      },
+      teams: { connect: createdTeams.map((team) => ({ id: team.id })) },
+    },
   });
 }

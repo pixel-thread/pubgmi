@@ -193,7 +193,6 @@ exports.Prisma.WalletScalarFieldEnum = {
 exports.Prisma.PlayerScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  balance: 'balance',
   category: 'category',
   userId: 'userId',
   createdAt: 'createdAt',
@@ -216,8 +215,10 @@ exports.Prisma.TeamScalarFieldEnum = {
   name: 'name',
   createdAt: 'createdAt',
   teamNumber: 'teamNumber',
+  playerStatsId: 'playerStatsId',
   fixturesId: 'fixturesId',
-  teamStatsId: 'teamStatsId'
+  teamStatsId: 'teamStatsId',
+  tournamentId: 'tournamentId'
 };
 
 exports.Prisma.TeamStatsScalarFieldEnum = {
@@ -229,6 +230,7 @@ exports.Prisma.TeamStatsScalarFieldEnum = {
   position: 'position',
   total: 'total',
   createdAt: 'createdAt',
+  playerStatsId: 'playerStatsId',
   tournamentId: 'tournamentId',
   roundId: 'roundId'
 };
@@ -268,6 +270,7 @@ exports.Prisma.NullsOrder = {
 };
 exports.Role = exports.$Enums.Role = {
   SUPER_ADMIN: 'SUPER_ADMIN',
+  PLAYER: 'PLAYER',
   USER: 'USER'
 };
 

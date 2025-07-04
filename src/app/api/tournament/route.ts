@@ -1,73 +1,78 @@
 import { SuccessResponse } from "@/libs/successResponse";
-import { prisma } from "@/libs/db";
 import { tournamentSchema } from "@/utils/validation/tournament";
 import { createFixtures } from "@/utils/fixture/createFixture";
 import { handleApiErrors } from "@/utils/errors/handleApiErrors";
+import { createRoundForTournament } from "@/services/round/createRoundForTournament";
+import { createTournament } from "@/services/tournament/createTournament";
+import { createTournamentFixture } from "@/services/fixture/createTournamentFixture";
+import { createTeams } from "@/services/teams/createTeams";
+import { createTeamStatsForTeams } from "@/services/stats/createTeamStats";
+import { createTournamentTeams } from "@/services/teams/createTournamentTeams";
+import { createTeamsForRound } from "@/services/teams/createTeamRound";
+import { getPlayersStats } from "@/services/stats/getPlayersStats";
+import { prisma } from "@/libs/db";
+import { logger } from "@/utils/logger";
+
+export async function GET(req: Request) {
+  try {
+    const tournaments = await prisma.tournament.findMany();
+
+    return SuccessResponse({
+      data: tournaments,
+      message: "Tournaments found",
+      status: 200,
+    });
+  } catch (error) {
+    return handleApiErrors(error);
+  }
+}
 
 export async function POST(req: Request) {
   try {
     const body = tournamentSchema.parse(await req.json());
 
-    // Step 1: Create tournament first
-    const tournament = await prisma.tournament.create({
-      data: {
-        name: body.name,
-        fee: body.fee,
-      },
+    const tournament = await createTournament({
+      name: body.name,
+      fee: body.fee,
     });
 
-    const round = await prisma.round.create({
-      data: {
-        number: 1,
-        tournament: { connect: { id: tournament.id } },
-      },
+    const round = await createRoundForTournament({
+      tournamentId: tournament.id,
+      number: 1,
     });
     // Step 2: Get all players
-    const players = await prisma.player.findMany({
-      include: { playerStats: true },
-    });
+    const players = await getPlayersStats();
 
     const playerStats = players.map((p) => ({
       id: p.id,
       kd: p?.playerStats?.kd || 0,
       win: p?.playerStats?.wins || 0,
+      name: p.name,
     }));
-
     // Step 3: Generate balanced teams
+    if (body.feeCut) {
+      for (const player of playerStats) {
+        await prisma.wallet.update({
+          where: { playerId: player.id },
+          data: {
+            amount: { decrement: tournament.fee },
+          },
+        });
+      }
+    }
+
     const { teams, unpairedPlayer } = createFixtures(playerStats);
 
     // Step 4: Create teams in parallel (outside transaction for performance)
-    const createdTeams = await Promise.all(
-      teams.map((team, idx) =>
-        prisma.team.create({
-          data: {
-            name: `Team ${idx + 1}`,
-            teamNumber: idx + 1,
-            players: { connect: team.map((player) => ({ id: player.id })) },
-            teamRound: { create: { round: { connect: { id: round.id } } } },
-          },
-        }),
-      ),
-    );
+    const createdTeams = await createTeams({
+      teams: teams,
+      roundId: round.id,
+      tournamentId: tournament.id,
+    });
 
-    for (const team of createdTeams) {
-      await prisma.teamStats.create({
-        data: {
-          total: 0,
-          position: 0,
-          kills: 0,
-          deaths: 0,
-          kd: 0,
-          team: { connect: { id: team.id } },
-          teamId: team.id,
-          tournament: { connect: { id: tournament.id } },
-          round: { connect: { id: round.id } },
-        },
-      });
-    }
     // Step 5: Add unpaired player as solo team
     if (unpairedPlayer) {
-      const soloTeam = await prisma.team.create({
+      const soloTeam = await createTournamentTeams({
         data: {
           name: `Team ${createdTeams.length + 1}`,
           teamNumber: createdTeams.length + 1,
@@ -77,25 +82,24 @@ export async function POST(req: Request) {
       createdTeams.push(soloTeam);
     }
 
-    for (const team of createdTeams) {
-      await prisma.teamRound.create({
-        data: {
-          tournamentId: tournament.id,
-          teamId: team.id,
-          roundId: round.id,
-        },
-      });
-    }
+    // Step 5: Add teams to round
+    await createTeamsForRound({
+      teams: createdTeams,
+      roundId: round.id,
+      tournamentId: tournament.id,
+    });
+
+    await createTeamStatsForTeams({
+      createdTeams,
+      tournamentId: tournament.id,
+      roundId: round.id,
+    });
+
+    logger.log({ message: "Round created" });
     // Step 6: Create fixture linking all created teams to the tournament
-    await prisma.fixture.create({
-      data: {
-        tournament: {
-          connect: { id: tournament.id },
-        },
-        teams: {
-          connect: createdTeams.map((team) => ({ id: team.id })),
-        },
-      },
+    await createTournamentFixture({
+      createdTeams,
+      tournament: { id: tournament.id },
     });
 
     return SuccessResponse({

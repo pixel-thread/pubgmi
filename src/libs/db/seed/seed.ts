@@ -21,7 +21,7 @@ async function main() {
     "🌱 Seeding database with 20 players, wallets, and player stats...",
   );
 
-  for (let i = 1; i <= 22; i++) {
+  for (let i = 1; i <= 10; i++) {
     // Create a user for each player
     const user = await prisma.user.create({
       data: {
@@ -35,7 +35,6 @@ async function main() {
     const player = await prisma.player.create({
       data: {
         name: `Player ${i}`,
-        balance: getRandomInt(100, 1000),
         category: getRandomCategory(),
         user: {
           connect: { id: user.id }, // ✅ explicitly connect user

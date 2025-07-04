@@ -66,18 +66,19 @@ model Otp {
 }
 
 model Tournament {
-  id         String      @id @default(cuid())
+  id         String      @id @default(uuid())
   name       String
   fee        Int
   createdAt  DateTime    @default(now())
   teamRounds TeamRound[]
   round      Round[]
   teamStats  TeamStats[]
-  Fixture    Fixture?
+  fixture    Fixture?
+  team       Team[]
 }
 
 model Fixture {
-  id           String     @id @default(cuid())
+  id           String     @id @default(uuid())
   tournamentId String     @unique
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   teams        Team[]
@@ -85,7 +86,7 @@ model Fixture {
 }
 
 model Round {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   number    Int // round number
   createdAt DateTime @default(now())
 
@@ -93,10 +94,12 @@ model Round {
   tournament   Tournament  @relation(fields: [tournamentId], references: [id])
   teams        TeamRound[]
   teamStats    TeamStats[]
+
+  @@unique([number, tournamentId])
 }
 
 model TeamRound {
-  id      String @id @default(cuid())
+  id      String @id @default(uuid())
   teamId  String
   roundId String
 
@@ -111,7 +114,7 @@ model TeamRound {
 }
 
 model Wallet {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   amount    Int
   createdAt DateTime @default(now())
   playerId  String?  @unique
@@ -121,9 +124,8 @@ model Wallet {
 }
 
 model Player {
-  id              String            @id @default(cuid())
+  id              String            @id @default(uuid())
   name            String
-  balance         Int
   category        Category          @default(NOOB)
   userId          String            @unique
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -136,7 +138,7 @@ model Player {
 }
 
 model PlayerStats {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   playerId  String   @unique
   player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   matches   Int
@@ -156,21 +158,24 @@ enum Category {
 }
 
 model Team {
-  id              String            @id @default(cuid())
+  id              String            @id @default(uuid())
   name            String
   players         Player[]
   createdAt       DateTime          @default(now())
   teamNumber      Int
   teamStats       TeamStats?        @relation(fields: [teamStatsId], references: [id])
+  playerStatsId   String?
   playerTeamStats PlayerTeamStats[]
   teamRound       TeamRound[]
   fixtures        Fixture?          @relation(fields: [fixturesId], references: [id])
   fixturesId      String?
   teamStatsId     String?           @unique
+  tournamentId    String?
+  tournament      Tournament?       @relation(fields: [tournamentId], references: [id])
 }
 
 model TeamStats {
-  id              String            @id @default(cuid())
+  id              String            @id @default(uuid())
   teamId          String?
   team            Team?
   kills           Int
@@ -179,6 +184,7 @@ model TeamStats {
   position        Int
   total           Int
   createdAt       DateTime          @default(now())
+  playerStatsId   String?
   playerTeamStats PlayerTeamStats[]
   tournament      Tournament?       @relation(fields: [tournamentId], references: [id])
   tournamentId    String?
@@ -189,13 +195,13 @@ model TeamStats {
 }
 
 model KDStats {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   playerId String @unique
   kd       Float
 }
 
 model PlayerTeamStats {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   playerId String
   teamId   String
 
@@ -209,7 +215,7 @@ model PlayerTeamStats {
   // Relations
   player      Player     @relation(fields: [playerId], references: [id])
   team        Team       @relation(fields: [teamId], references: [id])
-  teamStats   TeamStats? @relation(fields: [teamStatsId], references: [id])
+  TeamStats   TeamStats? @relation(fields: [teamStatsId], references: [id])
   teamStatsId String?
 
   @@unique([playerId, teamId]) // ensures one record per player per team

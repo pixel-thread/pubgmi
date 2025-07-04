@@ -1,6 +1,6 @@
 @token=eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImQyZWExZGZjLWE2ODMtNDA3My05OWFjLTQ2MTQ0MDUzM2I3MSIsImlhdCI6MTc1MDg3NDg5Mywic3ViIjoidG9rZW4ifQ.LaeIICBkX5JPXKumGFDxFDIkCG4AKXNa2RvPpUeqYuM
-@playerId=cmclwzqj800019kgd9hux8x0p
-@tournamentId=cmcn6z3hr00009kjz9gp9fq48
+@playerId=03645a57-cf41-4dc4-a473-1a2dd8e37e7c
+@tournamentId=b202e625-ac18-42a9-b46b-0f5187644b38
 
 ### 
 # @name GET playes 
@@ -31,18 +31,51 @@ Authorization: Bearer {{token}}
 }
 
 ### 
-# @name update playes stats 
+
+### 
+# @name GET_ALL_Tournament  
+GET {{NEXT_PUBLIC_API_URL}}/tournament
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 
+# @name Create_New_Tournament  
 POST {{NEXT_PUBLIC_API_URL}}/tournament
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 { 
   "name":"test 5",
-  "fee":1
+  "fee":726,
+  "feeCut":true
 }
 
 ### 
-# @name update playes stats 
-GET {{NEXT_PUBLIC_API_URL}}/tournament/{{tournamentId}}/fixture
+# @name get_tournament_fixture 
+GET {{NEXT_PUBLIC_API_URL}}/tournament/{{tournamentId}}/fixture HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 
+# @name  Get_Tournament_Players 
+GET {{NEXT_PUBLIC_API_URL}}/tournament/{{tournamentId}}/players HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 
+# @name  Get_Tournament_rounds 
+GET {{NEXT_PUBLIC_API_URL}}/tournament/{{tournamentId}}/rounds HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 
+# @name  Get_Tournament_stats_rounds 
+GET {{NEXT_PUBLIC_API_URL}}/tournament/{{tournamentId}}/stats HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 
+# @name  Get_Tournament_stats_rounds 
+GET {{NEXT_PUBLIC_API_URL}}/tournament/{{tournamentId}}/teams HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{token}}

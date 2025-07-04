@@ -8,5 +8,6 @@ type Props = {
 export async function createTournamentTeams({ data }: Props) {
   return await prisma.team.create({
     data: data,
+    include: { players: true },
   });
 }

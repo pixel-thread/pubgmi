@@ -12,7 +12,12 @@ export async function GET(
     const player = await getPlayerById({ id });
     return SuccessResponse({
       message: "Players fetched successfully",
-      data: player,
+      data: {
+        ...player,
+        name: player?.user?.name,
+        email: player?.user?.email,
+        phone: player?.user?.phone,
+      },
     });
   } catch (error) {
     return handleApiErrors(error);
